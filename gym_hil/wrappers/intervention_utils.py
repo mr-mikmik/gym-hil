@@ -16,6 +16,7 @@
 
 import json
 from pathlib import Path
+import pyspacemouse
 
 
 def load_controller_config(controller_name: str, config_path: str | None = None) -> dict:
@@ -536,6 +537,112 @@ class GamepadControllerHID(InputController):
         delta_x = -self.left_y * self.x_step_size  # Forward/backward
         delta_y = -self.left_x * self.y_step_size  # Left/right
         delta_z = -self.right_y * self.z_step_size  # Up/down
+
+        return delta_x, delta_y, delta_z
+
+    def should_quit(self):
+        """Return True if quit button was pressed."""
+        return self.quit_requested
+
+    def should_save(self):
+        """Return True if save button was pressed."""
+        return self.save_requested
+
+
+class SpaceMouseController(InputController):
+    """Generate motion deltas from the spacemouse"""
+
+    def __init__(
+        self,
+        x_step_size=1.0,
+        y_step_size=1.0,
+        z_step_size=1.0,
+        deadzone=0.1,
+    ):
+        """
+        Initialize the HID spacemouse controller.
+
+        Args:
+            step_size: Base movement step size in meters
+            z_scale: Scaling factor for Z-axis movement
+            deadzone: Joystick deadzone to prevent drift
+        """
+        super().__init__(x_step_size, y_step_size, z_step_size)
+        self.deadzone = deadzone
+        self.device = None
+        self.device_info = None
+
+        # Movement values (normalized from -1.0 to 1.0)
+        self.x = 0.0
+        self.y = 0.0
+        self.z = 0.0
+        self.buttons = [0, 0]
+        # here 
+
+        # Button states
+        self.buttons = {}
+        self.quit_requested = False
+        self.save_requested = False
+
+    def find_device(self):
+        """Look for the gamepad device by vendor and product ID."""
+        success = pyspacemouse.open(dof_callback=self._dof_callback, button_callback=self._button_callback)
+        if not success:
+            print("No SpaceMouse found. Please connect a SpaceMouse and try again.")
+        return success
+
+    def start(self):
+        """Connect to the gamepad using HIDAPI."""
+        success = pyspacemouse.open(dof_callback=self._dof_callback, button_callback=self._button_callback)
+        if not success:
+            print("No SpaceMouse found. Please connect a SpaceMouse and try again.")
+        self.running = success
+        return success
+
+    def stop(self):
+        """Close the HID device connection."""
+        self.running = False
+
+    def update(self, num_steps=100):
+        """
+        Read and process the latest gamepad data.
+        Due to an issue with the HIDAPI, we need to read the read the device several times in order to get a stable reading
+        """
+        for _ in range(num_steps):
+            self._update()
+    
+    def _update(self):
+        state = pyspacemouse.read()
+
+    def _dof_callback(self, dof: pyspacemouse.SpaceNavigator):
+        """Read and process the latest gamepad data."""
+        # values between [-1, 1]
+        self.x = dof.x
+        self.y = dof.y
+        self.z = dof.z 
+        self.intervention_flag = dof.buttons[0] == 1 and dof.buttons[1] == 1 # both buttons pressed
+        self.intervention_flag = True
+        self.episode_end_status = None
+
+    def _button_callback(self, dof: pyspacemouse.SpaceNavigator, buttons:pyspacemouse.ButtonState):
+        """Read and process the latest button pressing or release"""
+        button_right = buttons[0]
+        button_left = buttons[1]
+        if button_right == 1:
+            # close the gripper
+            self.open_gripper_command = True
+            self.close_gripper_command = False
+        if button_left == 1:
+            # open the gripper
+            self.close_gripper_command = True
+            self.open_gripper_command = False
+
+    def get_deltas(self):
+        """Get the current movement deltas from gamepad state."""
+        # Calculate deltas - invert as needed based on controller orientation
+        delta_x = -self.y * self.x_step_size  # Forward/backward
+        delta_y = self.x * self.y_step_size  # Left/right
+        delta_z = self.z * self.z_step_size  # Up/down
 
         return delta_x, delta_y, delta_z
 

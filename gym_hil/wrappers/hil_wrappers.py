@@ -118,6 +118,7 @@ class InputsControlWrapper(gym.Wrapper):
         y_step_size=1.0,
         z_step_size=1.0,
         use_gripper=False,
+        use_spacemouse=False,
         auto_reset=False,
         input_threshold=0.001,
         use_gamepad=True,
@@ -142,10 +143,17 @@ class InputsControlWrapper(gym.Wrapper):
             GamepadController,
             GamepadControllerHID,
             KeyboardController,
+            SpaceMouseController,
         )
 
         # use HidApi for macos
-        if use_gamepad:
+        if use_spacemouse:
+            self.controller = SpaceMouseController(
+                x_step_size=x_step_size,
+                y_step_size=y_step_size,
+                z_step_size=z_step_size,
+            )
+        elif use_gamepad:
             if sys.platform == "darwin":
                 self.controller = GamepadControllerHID(
                     x_step_size=x_step_size,

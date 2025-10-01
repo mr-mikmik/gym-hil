@@ -27,6 +27,7 @@ def wrap_env(
     ee_step_size: EEActionStepSize | None = None,
     use_viewer: bool = False,
     use_gamepad: bool = False,
+    use_spacemouse: bool = False,
     use_gripper: bool = True,
     auto_reset: bool = False,
     show_ui: bool = True,
@@ -68,6 +69,7 @@ def wrap_env(
         use_gripper=use_gripper,
         auto_reset=auto_reset,
         use_gamepad=use_gamepad,
+        use_spacemouse=use_spacemouse,
         controller_config_path=controller_config_path,
     )
 
@@ -87,6 +89,7 @@ def make_env(
     use_viewer: bool = False,
     use_gamepad: bool = False,
     use_gripper: bool = True,
+    use_spacemouse: bool = False,
     auto_reset: bool = False,
     show_ui: bool = True,
     gripper_penalty: float = -0.02,
@@ -125,6 +128,7 @@ def make_env(
         ee_step_size=ee_step_size,
         use_viewer=use_viewer,
         use_gamepad=use_gamepad,
+        use_spacemouse=use_spacemouse,
         use_gripper=use_gripper,
         auto_reset=auto_reset,
         show_ui=show_ui,

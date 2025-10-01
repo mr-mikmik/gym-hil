@@ -79,6 +79,19 @@ register(
 )
 
 register(
+    id="gym_hil/PandaPickCubeSpaceMouse-v0",
+    entry_point="gym_hil.wrappers.factory:make_env",
+    max_episode_steps=100,
+    kwargs={
+        "env_id": "gym_hil/PandaPickCubeBase-v0",  # Use the base environment
+        "use_viewer": True,
+        "use_gamepad": False,
+        "use_spacemouse": True,
+        "gripper_penalty": -0.05,
+    },
+)
+
+register(
     id="gym_hil/PandaPickCubeKeyboard-v0",
     entry_point="gym_hil.wrappers.factory:make_env",
     max_episode_steps=100,

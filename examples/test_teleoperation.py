@@ -29,6 +29,7 @@ def main():
     parser.add_argument(
         "--render-mode", type=str, default="human", choices=["human", "rgb_array"], help="Rendering mode"
     )
+    parser.add_argument("--use-spacemouse", action="store_true", help="Use 3D mouse (SpaceMouse) control")
     parser.add_argument("--use-keyboard", action="store_true", help="Use keyboard control")
     parser.add_argument(
         "--reset-delay",
@@ -59,7 +60,12 @@ def main():
 
     # Now try with the wrapped version
     print("\nTrying wrapped environment...")
-    env_id = "gym_hil/PandaPickCubeKeyboard-v0" if args.use_keyboard else "gym_hil/PandaPickCubeGamepad-v0"
+    if args.use_keyboard:
+        env_id = "gym_hil/PandaPickCubeKeyboard-v0"
+    elif args.use_spacemouse:
+        env_id = "gym_hil/PandaPickCubeSpaceMouse-v0"
+    else:
+        env_id = "gym_hil/PandaPickCubeGamepad-v0"
     env = gym.make(
         env_id,
         render_mode=args.render_mode,
